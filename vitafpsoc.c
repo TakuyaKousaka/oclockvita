@@ -42,7 +42,7 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
 			blit_stringf(LEFT_LABEL_X, 88, "PSVita OC Menu");
 
 			blit_set_color(0x00FFFFFF, 0x00000000);
-			blit_stringf(LEFT_LABEL_X, 120, "PROFILE    ");
+			blit_stringf(LEFT_LABEL_X, 120, "Profile    ");
 
 			switch(mode) {
             		case 3: //max battery
@@ -59,13 +59,13 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
                 		break;
 			}
 
-			blit_stringf(LEFT_LABEL_X, 136, "CPU CLOCK  ");
+			blit_stringf(LEFT_LABEL_X, 136, "CPU Clock  ");
 			blit_stringf(RIGHT_LABEL_X, 136, "%-4d  MHz", scePowerGetArmClockFrequency());
-			blit_stringf(LEFT_LABEL_X, 152, "BUS CLOCK  ");
+			blit_stringf(LEFT_LABEL_X, 152, "BUS Clock  ");
 			blit_stringf(RIGHT_LABEL_X, 152, "%-4d  MHz", scePowerGetBusClockFrequency());
-			blit_stringf(LEFT_LABEL_X, 168, "GPU CLOCK  ");
+			blit_stringf(LEFT_LABEL_X, 168, "GPU Clock  ");
 			blit_stringf(RIGHT_LABEL_X, 168, "%-4d  MHz", scePowerGetGpuClockFrequency());
-			blit_stringf(LEFT_LABEL_X, 184, "XBAR CLOCK ");
+			blit_stringf(LEFT_LABEL_X, 184, "XBar Clock ");
 			blit_stringf(RIGHT_LABEL_X, 184, "%-4d  MHz", scePowerGetGpuXbarClockFrequency());
 
       uint64_t t_tick = sceKernelGetProcessTimeWide();
@@ -78,7 +78,7 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
           tick = t_tick;
         }
         blit_set_color(0x00FFFFFF, 0x00000000);
-        blit_stringf(LEFT_LABEL_X, 72, "FPS: %-4d", fps);
+        blit_stringf(0, 0, "FPS: %-4d", fps);
       }
     }
     frames++;
@@ -90,35 +90,32 @@ int checkButtons(int port, tai_hook_ref_t ref_hook, SceCtrlData *ctrl, int count
 
   if (ref_hook == 0)
      ret = 1;
-  else
-  {
+  else {
     ret = TAI_CONTINUE(int, ref_hook, port, ctrl, count);
 
     if(showMenu){
       pressed_buttons = ctrl-> buttons & ~old_buttons;
-
-      if (mode > 0 && (pressed_buttons & SCE_CTRL_LEFT)){
+      if (mode > 0 && (pressed_buttons & SCE_CTRL_LEFT)) {
         mode--;
         scePowerSetArmClockFrequency(profiles[mode][0]);
         scePowerSetBusClockFrequency(profiles[mode][1]);
 	      scePowerSetGpuClockFrequency(profiles[mode][2]);
         scePowerSetGpuXbarClockFrequency(profiles[mode][3]);
-      }else if (mode <3 && (pressed_buttons & SCE_CTRL_RIGHT)){
+      } else if (mode <3 && (pressed_buttons & SCE_CTRL_RIGHT)) {
         mode++;
         scePowerSetArmClockFrequency(profiles[mode][0]);
         scePowerSetBusClockFrequency(profiles[mode][1]);
 	      scePowerSetGpuClockFrequency(profiles[mode][2]);
         scePowerSetGpuXbarClockFrequency(profiles[mode][3]);
-      }else if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_DOWN)){
+      } else if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_DOWN)) {
         showMenu = 0;
       }
 
       old_buttons = ctrl->buttons;
       ctrl->buttons = 0;
 
-     }else{
-
-       if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_UP)){
+     } else {
+       if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_UP)) {
          if(mode==-1){
             profile_game[0] = scePowerGetArmClockFrequency();
           	profile_game[1] = scePowerGetBusClockFrequency();
