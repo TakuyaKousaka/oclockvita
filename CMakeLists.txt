@@ -8,7 +8,7 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-project(OClockVita)
+project(VitaFPSOC)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-q -Wall -O3 -std=gnu99")
@@ -25,13 +25,13 @@ if (NOT ${RELEASE})
   add_definitions(-DENABLE_LOGGING)
 endif()
 
-add_executable(oclockvita
-  oclockvita.c
+add_executable(VitaFPSOC
+  vitafpsoc.c
   blit.c
   font.c
 )
 
-target_link_libraries(oclockvita
+target_link_libraries(VitaFPSOC
   taihen_stub
   SceLibKernel_stub
   SceIofilemgr_stub
@@ -41,10 +41,10 @@ target_link_libraries(oclockvita
   ScePower_stub
 )
 
-set_target_properties(oclockvita
+set_target_properties(VitaFPSOC
   PROPERTIES LINK_FLAGS "-nostdlib"
 )
 
-vita_create_self(oclockvita.suprx oclockvita
-  CONFIG ${CMAKE_SOURCE_DIR}/oclockvita.yml
+vita_create_self(vitafpsoc.suprx VitaFPSOC
+  CONFIG ${CMAKE_SOURCE_DIR}/vitafpsoc.yml
 )

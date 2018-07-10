@@ -1,7 +1,11 @@
-// Button Swap taiHEN plugin
-// Copyright (c) 2016 Scorp
+//PSVita overclock and FPS display
+//Code taken from both
+//https://github.com/frangarcj/oclockvita
+//https://github.com/Rinnegatamante/Framecounter
+//Mashed by TakuyaKousaka
 
 #include <psp2/kernel/modulemgr.h>
+#include <psp2/kernel/processmgr.h>
 #include <psp2/display.h>
 #include <psp2/ctrl.h>
 #include <psp2/power.h>
@@ -12,6 +16,11 @@
 #define RIGHT_LABEL_X CENTER(0)
 
 static SceUID g_hooks[9];
+
+uint64_t tick = 0;
+
+int frames = 0;
+int fps = 0;
 int showMenu = 0;
 int mode = -1;
 
@@ -27,11 +36,12 @@ static uint32_t old_buttons, pressed_buttons;
 static tai_hook_ref_t ref_hook0;
 int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
     blit_set_frame_buf(pParam);
-    if(showMenu){
-      blit_set_color(0x00FFFFFF, 0x00FF0000);
-			blit_stringf(LEFT_LABEL_X, 88, "SIMPLE OVERCLOCK");
 
-			blit_set_color(0x00FFFFFF, 0x00FF0000);
+    if(showMenu){
+      blit_set_color(0x00FFFFFF, 0x00FFFFFF);
+			blit_stringf(LEFT_LABEL_X, 88, "PSVita OC Menu");
+
+			blit_set_color(0x00FFFFFF, 0x00FFFFFF);
 			blit_stringf(LEFT_LABEL_X, 120, "PROFILE    ");
 
 			switch(mode) {
@@ -58,9 +68,22 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
 			blit_stringf(LEFT_LABEL_X, 184, "XBAR CLOCK ");
 			blit_stringf(RIGHT_LABEL_X, 184, "%-4d  MHz", scePowerGetGpuXbarClockFrequency());
 
+      uint64_t t_tick = sceKernelGetProcessTimeWide();
+      if(tick == 0) {
+        tick = t_tick;
+      } else {
+        if ((t_tick - tick) > 1000000) {
+          fps = frames;
+          frames = 0;
+          tick = t_tick;
+        }
+        blit_set_color(0x00FFFFFF, 0x00FFFFFF);
+        blit_stringf(LEFT_LABEL_X, 72, "FPS: %-4d", fps);
+      }
     }
+    frames++;
     return TAI_CONTINUE(int, ref_hook0, pParam, sync);
-}   
+}
 
 int checkButtons(int port, tai_hook_ref_t ref_hook, SceCtrlData *ctrl, int count) {
   int ret;
@@ -72,8 +95,8 @@ int checkButtons(int port, tai_hook_ref_t ref_hook, SceCtrlData *ctrl, int count
     ret = TAI_CONTINUE(int, ref_hook, port, ctrl, count);
 
     if(showMenu){
-      pressed_buttons = ctrl->buttons & ~old_buttons;
-      
+      pressed_buttons = ctrl-> buttons & ~old_buttons;
+
       if (mode > 0 && (pressed_buttons & SCE_CTRL_LEFT)){
         mode--;
         scePowerSetArmClockFrequency(profiles[mode][0]);
@@ -92,10 +115,10 @@ int checkButtons(int port, tai_hook_ref_t ref_hook, SceCtrlData *ctrl, int count
 
       old_buttons = ctrl->buttons;
       ctrl->buttons = 0;
-       
+
      }else{
-       
-       if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_UP)){         
+
+       if ((ctrl->buttons & SCE_CTRL_SELECT) && (ctrl->buttons & SCE_CTRL_UP)){
          if(mode==-1){
             profile_game[0] = scePowerGetArmClockFrequency();
           	profile_game[1] = scePowerGetBusClockFrequency();
@@ -105,9 +128,9 @@ int checkButtons(int port, tai_hook_ref_t ref_hook, SceCtrlData *ctrl, int count
          }
          showMenu = 1;
        }
-       
+
      }
-     
+
   }
 
   return ret;
@@ -124,22 +147,22 @@ int scePowerSetClockFrequency_patched(tai_hook_ref_t ref_hook, int port, int fre
 static tai_hook_ref_t ref_hook1;
 static int keys_patched1(int port, SceCtrlData *ctrl, int count) {
     return checkButtons(port, ref_hook1, ctrl, count);
-}   
+}
 
 static tai_hook_ref_t ref_hook2;
 static int keys_patched2(int port, SceCtrlData *ctrl, int count) {
     return checkButtons(port, ref_hook2, ctrl, count);
-}   
+}
 
 static tai_hook_ref_t ref_hook3;
 static int keys_patched3(int port, SceCtrlData *ctrl, int count) {
     return checkButtons(port, ref_hook3, ctrl, count);
-}   
+}
 
 static tai_hook_ref_t ref_hook4;
 static int keys_patched4(int port, SceCtrlData *ctrl, int count) {
     return checkButtons(port, ref_hook4, ctrl, count);
-}   
+}
 
 static tai_hook_ref_t power_hook1;
 static int power_patched1(int freq) {
@@ -165,54 +188,54 @@ void _start() __attribute__ ((weak, alias ("module_start")));
 
 int module_start(SceSize argc, const void *args) {
 
-  g_hooks[0] = taiHookFunctionImport(&ref_hook0, 
+  g_hooks[0] = taiHookFunctionImport(&ref_hook0,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0x7A410B64, // sceDisplaySetFrameBuf
                                       sceDisplaySetFrameBuf_patched);
-  g_hooks[1] = taiHookFunctionImport(&ref_hook1, 
+  g_hooks[1] = taiHookFunctionImport(&ref_hook1,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0xA9C3CED6, // sceCtrlPeekBufferPositive
                                       keys_patched1);
 
-  g_hooks[2] = taiHookFunctionImport(&ref_hook2, 
+  g_hooks[2] = taiHookFunctionImport(&ref_hook2,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0x15F81E8C, // sceCtrlPeekBufferPositive2
                                       keys_patched2);
 
-  g_hooks[3] = taiHookFunctionImport(&ref_hook3, 
+  g_hooks[3] = taiHookFunctionImport(&ref_hook3,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0x67E7AB83, // sceCtrlReadBufferPositive
                                       keys_patched3);
 
-  g_hooks[4] = taiHookFunctionImport(&ref_hook4, 
+  g_hooks[4] = taiHookFunctionImport(&ref_hook4,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0xC4226A3E, // sceCtrlReadBufferPositive2
                                       keys_patched4);
 
-  g_hooks[5] = taiHookFunctionImport(&power_hook1, 
+  g_hooks[5] = taiHookFunctionImport(&power_hook1,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0x74DB5AE5, // scePowerGetArmClockFrequency
                                       power_patched1);
 
-  g_hooks[6] = taiHookFunctionImport(&power_hook2, 
+  g_hooks[6] = taiHookFunctionImport(&power_hook2,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0xB8D7B3FB, // scePowerSetBusClockFrequency
                                       power_patched2);
 
-  g_hooks[7] = taiHookFunctionImport(&power_hook3, 
+  g_hooks[7] = taiHookFunctionImport(&power_hook3,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0x717DB06C, // scePowerSetGpuClockFrequency
                                       power_patched3);
 
-  g_hooks[8] = taiHookFunctionImport(&power_hook4, 
+  g_hooks[8] = taiHookFunctionImport(&power_hook4,
                                       TAI_MAIN_MODULE,
                                       TAI_ANY_LIBRARY,
                                       0xA7739DBE, // scePowerSetGpuXbarClockFrequency
