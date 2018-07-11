@@ -38,10 +38,10 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
     blit_set_frame_buf(pParam);
 
     if(showMenu){
-      blit_set_color(0x00FFFFFF, 0x00000000);
+      blit_set_color(0x00FFFFFF, 0x72000000);
 			blit_stringf(LEFT_LABEL_X, 88, "PSVita OC Menu");
 
-			blit_set_color(0x00FFFFFF, 0x00000000);
+			blit_set_color(0x00FFFFFF, 0x72000000);
 			blit_stringf(LEFT_LABEL_X, 120, "Profile    ");
 
 			switch(mode) {
@@ -77,7 +77,7 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
           frames = 0;
           tick = t_tick;
         }
-        blit_set_color(0x00FFFFFF, 0x00000000);
+        blit_set_color(0x00FFFFFF, 0x72000000);
         blit_stringf(0, 0, "FPS: %-4d", fps);
       }
     }
