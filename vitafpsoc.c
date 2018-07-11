@@ -51,10 +51,10 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
             		case 1: //default
                 		blit_stringf(RIGHT_LABEL_X, 120, "Default  ");
                 		break;
-            		case 2: //default
+            		case 2: //max performance
                 		blit_stringf(RIGHT_LABEL_X, 120, "Max Perf.");
                 		break;
-            		case 0:
+            		case 0: //game default config
                 		blit_stringf(RIGHT_LABEL_X, 120, "Game Def.");
                 		break;
 			}
@@ -81,7 +81,11 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
         blit_stringf(0, 0, "FPS: %-4d", fps);
       }
     }
-    frames++;
+    if(showMenu) {
+      frames++;
+    } else {
+      frames = 0;
+    }
     return TAI_CONTINUE(int, ref_hook0, pParam, sync);
 }
 
